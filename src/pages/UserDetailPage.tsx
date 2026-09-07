@@ -323,6 +323,7 @@ import {
   type LiveActivityTestKind,
 } from "../api/devices";
 import { getUserCalendars, getUserIntegrations } from "../api/calendars";
+import GoogleCalendarFetchTestModal from "../components/GoogleCalendarFetchTestModal";
 import { getUserEvents } from "../api/schedules";
 import { getUserRepeatTasks, type RepeatTask } from "../api/routines";
 import { useMe } from "../auth/useMe";
@@ -342,6 +343,7 @@ export default function UserDetailPage() {
   const [taskDate, setTaskDate] = useState<string | undefined>();
   const [includeDeletedTasks, setIncludeDeletedTasks] = useState(false);
   const [scheduleDate, setScheduleDate] = useState<string | undefined>();
+  const [fetchTestOpen, setFetchTestOpen] = useState(false);
   const { data: me } = useMe();
   const isSuperAdmin = me?.role === "super_admin";
 
@@ -673,6 +675,18 @@ export default function UserDetailPage() {
               dataIndex: "last_events_synced_at",
               width: 160,
               render: (v: string | null) => (v ? dayjs(v).format("YYYY-MM-DD HH:mm") : "-"),
+            },
+            {
+              title: "Actions",
+              key: "actions",
+              width: 120,
+              render: (_: unknown, r) =>
+                // 저장된 토큰으로 Google API 를 실제 호출하므로 super_admin 에게만 노출
+                r.provider === "google_calendar" && isSuperAdmin ? (
+                  <Button size="small" onClick={() => setFetchTestOpen(true)}>
+                    Fetch Test
+                  </Button>
+                ) : null,
             },
           ]}
         />
@@ -1105,6 +1119,14 @@ export default function UserDetailPage() {
           </Form.Item>
         </Form>
       </Modal>
+      {uid && (
+        <GoogleCalendarFetchTestModal
+          uid={uid}
+          open={fetchTestOpen}
+          onClose={() => setFetchTestOpen(false)}
+          calendars={calendars}
+        />
+      )}
     </>
   );
 }
